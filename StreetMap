@@ -1,0 +1,156 @@
+
+import java.io.*;
+import java.util.*;
+import javax.swing.*;
+
+public class StreetMap {
+
+	private static HashMap<String, double[]> intersection = new HashMap<String, double[]>();
+	private static HashMap<String, String[]> road = new HashMap<String, String[]>();
+	private static Graph graph = new Graph();
+
+	public static void main(String[] args) {
+
+		readInput("ur.txt");
+		
+		JFrame frame = new JFrame(); StreetMapping canvas = new StreetMapping();
+		frame.setSize(500, 500); frame.setResizable(true); frame.add(canvas);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); frame.setVisible(true);
+		canvas.setRoads(road, intersection);
+		
+		/*Its source = graph.getVertice("GILBERT-LONG");
+		Its target = graph.getVertice("LOVEJOY");
+		Dijkstra(graph, source);
+		System.out.println("DIstance to lovejoy from gilbert" + target.d());
+		System.out.println("Chain to gilbert from lovejoy: " + target.printP(target) 
+			+ "\nTarget parent: " + target.p().s() + " Name of target: " + target.s());
+		System.out.println("Sum: " + target.d());*/
+	}
+
+	public static void Dijkstra(Graph g, Its sc) {
+
+		PriorityQueue<Its> q = new PriorityQueue<Its>();
+		for (Its it : g.getVertice().values()) {
+			it.setD(Integer.MAX_VALUE);
+			it.setP(null);
+		}
+		sc.setD(0);
+		q.add(sc);
+
+		while (!q.isEmpty()) {
+			Its min = q.remove();
+			System.out.println("Min: " + min.s() + " d: " + min.d() + " p: " + min.p());
+
+			// For each neighbor
+			for (int j = 0; j < min.getNeighbor().size(); j++) {
+				Its neighbor = min.neighbor(j);
+				System.out.println("Neigh: " + neighbor.s());
+				double tempDis = min.d() + min.getWeight(neighbor);
+				System.out.println("minDis: " + min.d());
+				System.out.println("tempDis: " + tempDis);
+				if (tempDis < neighbor.d()) {
+					neighbor.setD(tempDis);
+					System.out.println("Set " + neighbor.s() + " with " + neighbor.d());
+					neighbor.setP(min);
+					if (q.contains(neighbor)) {
+						q.remove(neighbor);
+					}
+					q.add(neighbor);
+				}
+			}
+		}
+	}
+
+	public static void readInput(String fileName) {
+		File file;
+		Scanner in;
+		try {
+			file = new File(fileName);
+			in = new Scanner(file);
+		} catch (FileNotFoundException e) {
+			System.out.println("File not found");
+			return;
+		} catch (Exception e) {
+			System.out.println("Error initializing scanner.");
+			return;
+		}
+
+		String line = "";
+		String[] info = { "" };
+
+		try {
+			while (in.hasNextLine()) {
+				line = in.nextLine();
+				info = line.split("\\t+");
+				checkType(info);
+			}
+			System.out.println("\nEnd of file");
+		} catch (ArrayIndexOutOfBoundsException e) {
+			System.out.println("Error: array index out of bound");
+		} catch (Exception e) {
+			System.out.println("Error reading input");
+		} finally {
+			in.close();
+		}
+	}
+
+	public static void checkType(String[] its) {
+		if (its[0].equals("i")) {
+			addIntersection(its);
+		} else if (its[0].equals("r")) {
+			addRoad(its);
+		}
+	}
+
+	public static void addIntersection(String[] its) {
+		double x1 = Double.parseDouble(its[2]);
+		double x2 = Double.parseDouble(its[3]);
+		double[] coordinate = { x1, x2 }; //// Problem
+		String s = its[1];
+		intersection.put(s, coordinate);
+		graph.addVertice(s, new Its(s));
+	}
+
+	public static void addRoad(String[] its) {
+		String s1 = its[2];
+		String s2 = its[3];
+		String[] ints = {s1, s2};
+		road.put(its[1], ints);
+		HashMap<String, Its> vertice = graph.getVertice();
+		
+		double wt = distance(intersection.get(s1)[0], intersection.get(s1)[1], 
+				intersection.get(s2)[0], intersection.get(s2)[1]);
+		if (vertice.containsKey(s1)) {
+			if (vertice.containsKey(s2)) {
+				graph.setEdge(vertice.get(s1), vertice.get(s2), wt);
+			} else {
+				graph.setEdge(vertice.get(s1), new Its(s2), wt);
+			}
+		} else {
+			if (vertice.containsKey(s2)) {
+				graph.setEdge(new Its(s1), vertice.get(s2), wt);
+			} else {
+				graph.setEdge(new Its(s1), new Its(s2), wt);
+			}
+		}
+	}
+
+	private static double distance(double lat1, double lon1, double lat2, double lon2) {
+		double theta = lon1 - lon2;
+		double dist = Math.sin(deg2rad(lat1)) * Math.sin(deg2rad(lat2))
+				+ Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.cos(deg2rad(theta));
+		dist = Math.acos(dist);
+		dist = rad2deg(dist);
+		dist = dist * 60 * 1.1515;
+		return dist;
+	}
+
+	private static double deg2rad(double deg) {
+		return (deg * Math.PI / 180.0);
+	}
+
+	private static double rad2deg(double rad) {
+		return (rad * 180.0 / Math.PI);
+	}
+
+}
