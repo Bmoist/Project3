@@ -1,0 +1,135 @@
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.HashMap;
+
+public class StreetMapping extends JComponent {
+
+	private HashMap<String, String[]> road = new HashMap<String, String[]>();
+	private HashMap<String, double[]> coordinate = new HashMap<String, double[]>();
+	// 思路：will hashmap implementation of vertices work?
+	// Use MinHeap in HuffmanSubmit and write your own compareTo method.
+	// Need to scale to the window. Rewrite the scale function: Find Min of x, Min
+	// of y, scale according to the window size
+
+	public StreetMapping() {
+
+	}
+
+	public void setRoads(HashMap<String, String[]> rd, HashMap<String, double[]> coordinate) {
+		road = rd;
+		this.coordinate = coordinate;
+	}
+
+	public double getDiffX(HashMap<String, double[]> cd) {
+		double max = 0;
+		double min = Integer.MAX_VALUE;
+		double temp;
+		for (String s : cd.keySet()) {
+			temp = cd.get(s)[0];
+			if (max < temp) {
+				max = temp;
+			}
+			if (min > temp) {
+				min = temp;
+			}
+		}
+		return max - min;
+	}
+
+	public double getDiffY(HashMap<String, double[]> cd) {
+		double max = 0;
+		double min = Integer.MAX_VALUE;
+		double temp;
+		for (String s : cd.keySet()) {
+			temp = Math.abs(cd.get(s)[1]);
+			if (max < temp) {
+				max = temp;
+			}
+			if (min > temp) {
+				min = temp;
+			}
+		}
+		return max - min;
+	}
+
+	public double getMinx(HashMap<String, double[]> cd) {
+		double min = Integer.MAX_VALUE;
+		double temp;
+		for (String s : cd.keySet()) {
+			temp = cd.get(s)[0];
+			if (min > temp) {
+				min = temp;
+			}
+		}
+		return min;
+	}
+
+	public double getMiny(HashMap<String, double[]> cd) {
+		double min = Integer.MAX_VALUE;
+		double temp;
+		for (String s : cd.keySet()) {
+			temp = Math.abs(cd.get(s)[1]);
+			if (min > temp) {
+				min = temp;
+			}
+		}
+		return min;
+	}
+
+	public int scaleX(double x, double diff, double min) {
+		double value = x - min;
+		double ratio = this.getWidth() / diff;
+		return (int) (value * ratio + 1);
+	}
+
+	public int scaleY(double y, double diff, double min) {
+		double value = Math.abs(y) - min;
+		System.out.println("value y: " + value);
+		double ratio = this.getHeight() / diff;
+		System.out.println("Ration: " + ratio + " , value: " + (value * ratio + 1));
+		return (int) (value * ratio + 1);
+	}
+
+	public int moveX(int y) {
+		double ratio = (double) this.getWidth() / (double) this.getHeight();
+		return (int) ((this.getHeight() - y) * ratio);
+	}
+
+	public int moveY(int x) {
+		double ratio = (double) this.getHeight() / (double) this.getWidth();
+		return (int) ((this.getWidth() - x) * ratio);
+	}
+
+	public void drawRoad(Graphics g) {
+		for (String element : road.keySet()) {
+			String[] road = this.road.get(element);
+			double[] c1 = coordinate.get(road[0]);
+			double[] c2 = coordinate.get(road[1]);
+
+			double dx = getDiffX(coordinate);
+			double dy = getDiffY(coordinate);
+			double minx = getMinx(coordinate);
+			double miny = getMiny(coordinate);
+
+			int x1 = scaleX(c1[0], dx, minx);
+			int y1 = scaleY(c1[1], dy, miny);
+			int x2 = scaleX(c2[0], dx, minx);
+			int y2 = scaleY(c2[1], dy, miny);
+
+			int a1 = moveX(y1);
+			int a2 = moveY(x1);
+			int b1 = moveX(y2);
+			int b2 = moveY(x2);
+			g.drawLine(a1, a2, b1, b2);
+			// g.drawLine(x1, y1, x2, y2);
+			System.out.println(c1[0] + " " + c1[1] + " " + c2[0] + " " + c2[1]);
+			System.out.println(x1 + " " + y1 + " " + x2 + " " + y2 + " ");
+			System.out.println(a1 + " " + a2 + " " + b1 + " " + b2 + " ");
+		}
+	}
+
+	public void paintComponent(Graphics g) {
+		drawRoad(g);
+	}
+}
